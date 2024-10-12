@@ -1,0 +1,13 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Samples/Meta Movement/69.0.0/Body Tracking Samples/Scenes/MovementHighFidelity.unity
+    guid: 95d70f1c0a626c449881b1b4260b6b9d
+  m_configObjects:
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 63f5614145f83423e97766c58e0960e0, type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: f8058df0564a94aaba7e27a8b7f1ea64, type: 2}
