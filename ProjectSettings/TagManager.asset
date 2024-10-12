@@ -25,6 +25,7 @@ TagManager:
   - SamplesInfoPanel
   - QDSUIToggleCheckboxRadio
   - QDSUISection
+  - Table
   layers:
   - Default
   - TransparentFX
