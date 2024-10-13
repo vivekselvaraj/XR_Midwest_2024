@@ -5,30 +5,35 @@ public class PostureManager : MonoBehaviour
 {
     public GameObject headRig;
     public DisplaySpawner displaySpawner;  // Reference to DisplaySpawner
-    public UIManager uiManager;
+    public UIManager uiManager;  // For showing posture feedback to the user
 
     private Vector3 currentHeadPosition;
     private Quaternion currentHeadRotation;
     private Vector3 optimalPosition;
     private Quaternion optimalRotation;
 
-    // Thresholds for detecting deviations
+    // Thresholds for detecting posture deviations
     public float forwardHeadThreshold = 0.075f;  // 2-3 inches forward slouching (0.05 - 0.075 meters)
-    public float verticalTiltThreshold = 20.0f;  // Degrees, for head tilt (up/down)
-    public float lateralTiltThreshold = 15.0f;   // Degrees, for head side tilts (left/right)
-    
-    private bool isCalibrated = false;
-    private string currentPostureStatus = "Press C to Calibrate Posture";  // Default to good posture
+    public float verticalTiltThreshold = 20.0f;  // Degrees for head tilt (up/down)
+    public float lateralTiltThreshold = 15.0f;   // Degrees for head tilt (left/right)
 
+    // For controlling the timing of display adjustments
+    private float lastAdjustmentTime = 0f;
+    public float adjustmentInterval = 0.5f;  // Adjust every 0.5 seconds
+
+    private bool isCalibrated = false;  // Whether the posture has been calibrated
+    private string currentPostureStatus = "Press 'C' to Calibrate Posture";  // Default to good posture
+
+    // Update method to handle real-time posture analysis
     void Update()
     {
-        // Debug key press to trigger calibration
+        // Start calibration with 'C' key
         if (Input.GetKeyDown(KeyCode.C))
         {
-            StartCoroutine(CalibrateAfterDelay(3f));  // Start the coroutine with 3 seconds delay for debug
+            StartCoroutine(CalibrateAfterDelay(3f));  // Start calibration after 3 seconds for user adjustment
         }
-        
-        // Analyze posture in real-time
+
+        // Analyze posture if calibrated
         if (isCalibrated)
         {
             Vector3 headPosition = headRig.transform.localPosition;
@@ -37,30 +42,29 @@ public class PostureManager : MonoBehaviour
         }
     }
 
-    // Method to be called by the UI button
+    // Method to trigger calibration via UI
     public void TriggerCalibration()
     {
-        StartCoroutine(CalibrateAfterDelay(3f));  // Start the calibration coroutine with 3 seconds delay
+        StartCoroutine(CalibrateAfterDelay(3f));  // Start calibration after a 3-second delay
     }
 
-    // Coroutine to wait before calibrating
+    // Coroutine to wait for a certain time before calibrating the posture
     private IEnumerator CalibrateAfterDelay(float waitTime)
     {
         Debug.Log("Preparing to calibrate. Please adjust posture...");
-        uiManager.ShowDialog("Preparing to calibrate. Please adjust posture...", 3.0f);
-        
-        yield return new WaitForSeconds(waitTime);  // Wait for the specified time
+        uiManager.ShowDialog("Preparing to calibrate. Please adjust posture...", waitTime);
 
-        // Now calibrate the posture
+        yield return new WaitForSeconds(waitTime);  // Wait for the user to adjust posture
+
+        // Perform the calibration
         CalibratePosture();
-        
         Debug.Log("Posture calibrated.");
         uiManager.ShowDialog("Posture calibrated.", 3.0f);
 
-        // Trigger the display spawner to place the displays
+        // Trigger display placement after calibration
         if (displaySpawner != null)
         {
-            displaySpawner.PlaceDisplays();
+            displaySpawner.PlaceDisplays();  // Place displays based on the newly calibrated posture
         }
         else
         {
@@ -68,14 +72,13 @@ public class PostureManager : MonoBehaviour
         }
     }
 
-    // Calibrate the posture based on the current head position and rotation from HeadTrackingScript
+    // Calibrate the posture based on the current head position and rotation
     public void CalibratePosture()
     {
         if (headRig != null)
         {
-            // Use the current head position and rotation from the HeadTrackingScript
-            optimalPosition = headRig.transform.localPosition;
-            optimalRotation = headRig.transform.localRotation;
+            optimalPosition = headRig.transform.localPosition;  // Set optimal position based on current head position
+            optimalRotation = headRig.transform.localRotation;  // Set optimal rotation based on current head rotation
             isCalibrated = true;
             Debug.Log("Optimal posture calibrated: " + optimalPosition + ", " + optimalRotation);
         }
@@ -85,7 +88,7 @@ public class PostureManager : MonoBehaviour
         }
     }
 
-    // Analyze posture based on head data and update posture status
+    // Analyze the user's posture based on head position and rotation, updating posture status
     private void AnalyzePosture(Vector3 headPosition, Quaternion headRotation)
     {
         if (!isCalibrated) return;
@@ -100,6 +103,12 @@ public class PostureManager : MonoBehaviour
         if (positionDelta.z > forwardHeadThreshold)
         {
             currentPostureStatus = "Slouching detected";
+
+            if (Time.time > lastAdjustmentTime + adjustmentInterval)
+            {
+                displaySpawner.AdjustDisplayForSlouching();  // Trigger display adjustment when slouching is detected
+                lastAdjustmentTime = Time.time;
+            }
         }
         else if (positionDelta.z < -forwardHeadThreshold)
         {
@@ -107,7 +116,7 @@ public class PostureManager : MonoBehaviour
         }
         else
         {
-            // Calculate rotation deviation
+            // Calculate rotation deviation for head tilts
             Quaternion rotationDelta = Quaternion.Inverse(optimalRotation) * headRotation;
             rotationDelta.ToAngleAxis(out float angle, out Vector3 axis);
 
@@ -137,11 +146,19 @@ public class PostureManager : MonoBehaviour
             }
             else
             {
+                // Good posture detected, revert display if previously adjusted
                 currentPostureStatus = "Good posture";
+
+                // if (Time.time > lastAdjustmentTime + adjustmentInterval)
+                // {
+                //     StartCoroutine(displaySpawner.RevertDisplayToOptimalPosition());  // Gradual reversion of the display
+                //     lastAdjustmentTime = Time.time;
+                // }
             }
         }
     }
 
+    // Getters for current and optimal positions and rotations
     public Vector3 GetCurrentHeadPosition()
     {
         return currentHeadPosition;
@@ -156,7 +173,7 @@ public class PostureManager : MonoBehaviour
     {
         return currentPostureStatus;
     }
-    
+
     public Vector3 GetOptimalPosition()
     {
         return optimalPosition;
