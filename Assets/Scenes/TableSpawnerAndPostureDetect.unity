@@ -5413,7 +5413,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   headRig: {fileID: 34407379}
   displaySpawner: {fileID: 780743730}
-  uiManager: {fileID: 0}
+  uiManager: {fileID: 1184595481}
   forwardHeadThreshold: 0.075
   verticalTiltThreshold: 20
   lateralTiltThreshold: 15
