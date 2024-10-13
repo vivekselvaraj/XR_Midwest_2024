@@ -5,6 +5,7 @@ using UnityEngine;
 public class TableSpawner : MonoBehaviour
 {
     public GameObject tablePrefab;
+    public GameObject clockPrefab;
     public OVRSkeleton LeftSkeleton;
     public OVRSkeleton RightSkeleton;
     
@@ -25,6 +26,14 @@ public class TableSpawner : MonoBehaviour
             Destroy(oldTable);
         }
         GameObject table = Instantiate(tablePrefab, midpoint, rotation);
+
+        GameObject oldClock = GameObject.FindGameObjectWithTag("Clock");
+        if (oldClock != null)
+        {
+            Destroy(oldClock);
+        }
+        Vector3 clockPosition = new Vector3(midpoint.x, midpoint.y + 0.1f, midpoint.z + 0.1f);
+        GameObject clock = Instantiate(clockPrefab, clockPosition, rotation);
     }
 
     public Transform GetFingerTransformForSkeleton(OVRSkeleton skeleton, OVRSkeleton.BoneId boneId) {
